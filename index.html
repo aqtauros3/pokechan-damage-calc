@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<!-- saved from url=(0049)file:///C:/Users/mihia/Downloads/damage_calc.html -->
+<html lang="ja"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>ダメージ計算 / Champions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com/">
+<link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+<link href="./index_files/css2" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0c1018; --panel:#141b27; --panel2:#1b2433;
+    --line:#2a3548; --ink:#e7edf6; --dim:#7d8aa0;
+    --amber:#ffb02e; --amber-d:#3a2c12;
+    --teal:#38e0c4; --teal-d:#0e2e2a;
+    --crit:#ff5d73; --crit-d:#2e1218;
+  }
+  *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    background:
+      radial-gradient(120% 80% at 100% 0%, #16202f 0%, transparent 55%),
+      radial-gradient(120% 90% at 0% 100%, #121a26 0%, transparent 50%),
+      var(--bg);
+    color:var(--ink); font-family:"Zen Kaku Gothic New",system-ui,sans-serif;
+    min-height:100dvh; overflow-y:auto;
+    display:flex; flex-direction:column;
+    padding:6px 9px calc(8px + env(safe-area-inset-bottom));
+    gap:5px;
+  }
+  .num{font-family:"JetBrains Mono",monospace;}
+  header{display:flex; align-items:baseline; justify-content:space-between; padding:0 2px;}
+  header h1{font-size:13px; font-weight:900;} header h1 b{color:var(--amber);}
+  header span{font-size:8.5px; color:var(--dim); letter-spacing:.16em; text-transform:uppercase;}
+
+  .inputs{display:grid; grid-template-columns:1fr 1fr; gap:5px;}
+  .field{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:4px 8px; display:flex; flex-direction:column;}
+  .field.full{grid-column:1 / -1;}
+  .field label{font-size:9px; color:var(--dim); font-weight:700;}
+  .field input{background:transparent; border:0; color:var(--ink); width:100%; font-family:"JetBrains Mono",monospace; font-size:18px; font-weight:700; outline:none;}
+  .field input::placeholder{color:#3c485c; font-size:12px;}
+
+  .row{display:grid; grid-template-columns:54px 1fr; align-items:center; gap:7px;}
+  .row .tag{font-size:9.5px; color:var(--dim); font-weight:700;}
+  .seg{display:grid; gap:3px; background:var(--panel); border:1px solid var(--line); border-radius:9px; padding:3px;}
+  .seg.two{grid-template-columns:repeat(2,1fr);} .seg.three{grid-template-columns:repeat(3,1fr);} .seg.five{grid-template-columns:repeat(5,1fr);}
+  .seg button{border:0; background:transparent; color:var(--dim); font-family:"JetBrains Mono",monospace; font-weight:700; font-size:11.5px; padding:5px 0; border-radius:6px; transition:.12s;}
+  .seg button.on{background:var(--teal); color:#06231f;}
+
+  /* 種族値計算ブロック */
+  .calc{display:grid; grid-template-columns:1fr 1fr; gap:6px;}
+  .cc{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:5px 7px; display:flex; flex-direction:column; gap:4px;}
+  .cc .cch{display:flex; justify-content:space-between; align-items:baseline;}
+  .cc .cch .nm{font-size:9px; color:var(--dim); font-weight:700;}
+  .cc .cch .rv{font-family:"JetBrains Mono",monospace; font-size:18px; font-weight:700; color:var(--teal);}
+  .cc .bf{display:flex; align-items:center; gap:5px;}
+  .cc .bf span{font-size:9px; color:var(--dim);}
+  .cc .bf input{background:#0e1420; border:1px solid var(--line); border-radius:6px; color:var(--ink); font-family:"JetBrains Mono",monospace; font-size:13px; font-weight:700; width:100%; padding:3px 6px; outline:none;}
+  .cc .evr{display:grid; grid-template-columns:auto 1fr auto; gap:5px; align-items:center;}
+  .cc .evr button{font-family:"JetBrains Mono",monospace; font-size:10px; font-weight:700; border:1px solid var(--line); background:var(--panel2); color:var(--dim); border-radius:6px; padding:3px 6px;}
+  .cc .evr input[type=range]{-webkit-appearance:none; appearance:none; width:100%; height:4px; border-radius:4px; background:#2c3a52; outline:none;}
+  .cc .evr input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:var(--teal); border:2px solid #0e1722;}
+  .cc .evnum{font-size:9px; color:var(--dim); text-align:center; font-family:"JetBrains Mono",monospace;}
+  .cc .nat{display:grid; grid-template-columns:repeat(3,1fr); gap:3px;}
+  .cc .nat button{font-family:"JetBrains Mono",monospace; font-size:10.5px; font-weight:700; border:0; background:var(--panel2); color:var(--dim); border-radius:6px; padding:4px 0;}
+  .cc .nat button.on{background:var(--amber); color:#2a1c05;}
+
+  .otherbox{display:flex; gap:5px;}
+  .otherbox .inp{background:var(--panel); border:1px solid var(--line); border-radius:9px; padding:0 9px; display:flex; align-items:center; gap:4px; min-width:80px;}
+  .otherbox .inp span{font-size:9px; color:var(--dim);}
+  .otherbox .inp input{background:transparent; border:0; color:var(--ink); width:42px; outline:none; font-family:"JetBrains Mono",monospace; font-size:15px; font-weight:700;}
+  .otherbox .chips{display:grid; grid-template-columns:repeat(4,1fr); gap:3px; flex:1;}
+  .otherbox .chips button{border:1px solid var(--line); background:var(--panel); color:var(--dim); font-family:"JetBrains Mono",monospace; font-size:10px; font-weight:700; border-radius:8px;}
+  .otherbox .chips button.on{background:var(--amber-d); border-color:var(--amber); color:var(--amber);}
+
+  .toggles{display:grid; grid-template-columns:repeat(3,1fr); gap:5px;}
+  .tg{background:var(--panel); border:1px solid var(--line); border-radius:9px; padding:5px 4px; text-align:center;}
+  .tg .t1{font-size:10.5px; font-weight:700;} .tg .t2{font-size:8.5px; color:var(--dim); font-family:"JetBrains Mono",monospace;}
+  .tg.on{background:var(--amber-d); border-color:var(--amber);} .tg.on .t1,.tg.on .t2{color:var(--amber);}
+
+  .chip{display:grid; grid-template-columns:54px 1fr auto; align-items:center; gap:7px; background:var(--panel); border:1px solid var(--line); border-radius:9px; padding:5px 9px;}
+  .chip .tag{font-size:9.5px; color:var(--dim); font-weight:700;}
+  .chip input[type=range]{-webkit-appearance:none; appearance:none; height:4px; border-radius:4px; background:linear-gradient(90deg,var(--crit),#5a2230); outline:none;}
+  .chip input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:16px; height:16px; border-radius:50%; background:var(--crit); border:2px solid #1b2433;}
+  .chip .val{font-family:"JetBrains Mono",monospace; font-size:11px; min-width:78px; text-align:right;} .chip .val b{color:var(--crit);}
+
+  .out{margin-top:auto; display:flex; flex-direction:column; gap:5px; padding-top:3px;}
+  .res{border-radius:12px; padding:6px 11px; display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:9px; border:1px solid var(--line);}
+  .res.normal{background:linear-gradient(100deg,var(--teal-d),var(--panel2)); border-color:#1f5a52;}
+  .res.crit{background:linear-gradient(100deg,var(--crit-d),var(--panel2)); border-color:#5a2230;}
+  .res .lbl{font-size:10px; font-weight:900;} .res.normal .lbl{color:var(--teal);} .res.crit .lbl{color:var(--crit);}
+  .res .dmg{font-family:"JetBrains Mono",monospace; font-weight:700; font-size:21px; text-align:center;}
+  .res .rstack{text-align:right; min-width:96px; display:flex; flex-direction:column; line-height:1.25;}
+  .res .pct{font-family:"JetBrains Mono",monospace; font-size:11px; color:var(--dim);} .res .pct b{color:var(--ink);}
+  .res .ko{font-size:11px; font-weight:900;} .res .ko.sure{color:var(--teal);} .res .ko.rng{color:var(--amber);} .res.crit .ko.sure{color:#ffd9df;}
+  .hint{font-size:8px; color:#586477; text-align:center;}
+</style>
+</head>
+<body>
+  <header><h1>ダメージ<b>計算</b></h1><span>Champions / Gen9</span></header>
+
+  <div class="inputs">
+    <div class="field"><label>レベル</label><input id="lv" class="num" type="number" inputmode="numeric" value="50"></div>
+    <div class="field"><label>技 威力</label><input id="pow" class="num" type="number" inputmode="numeric" placeholder="100"></div>
+  </div>
+
+  <div class="row">
+    <span class="tag">入力</span>
+    <div class="seg two" id="segMode">
+      <button data-v="direct" class="on">直接</button><button data-v="calc" class="">種族値計算</button>
+    </div>
+  </div>
+
+  <!-- 直接入力 -->
+  <div class="inputs" id="directBox" style="display: grid;">
+    <div class="field"><label>こうげき / とくこう</label><input id="atk" class="num" type="number" inputmode="numeric" placeholder="200"></div>
+    <div class="field"><label>ぼうぎょ / とくぼう</label><input id="def" class="num" type="number" inputmode="numeric" placeholder="120"></div>
+  </div>
+
+  <!-- 種族値計算 -->
+  <div class="calc" id="calcBox" style="display: none;">
+    <div class="cc">
+      <div class="cch"><span class="nm">こうげき側</span><span class="rv" id="rvA">—</span></div>
+      <div class="bf"><span>種</span><input id="baseA" type="number" inputmode="numeric" placeholder="種族値"></div>
+      <div class="evr"><button data-t="A" data-v="0">0</button><input id="evA" type="range" min="0" max="32" step="1" value="0"><button data-t="A" data-v="32">32</button></div>
+      <div class="evnum">能力P <span id="evAn">0</span></div>
+      <div class="nat" id="natA"><button data-v="0.9">0.9</button><button data-v="1" class="on">1.0</button><button data-v="1.1">1.1</button></div>
+    </div>
+    <div class="cc">
+      <div class="cch"><span class="nm">ぼうぎょ側</span><span class="rv" id="rvD">—</span></div>
+      <div class="bf"><span>種</span><input id="baseD" type="number" inputmode="numeric" placeholder="種族値"></div>
+      <div class="evr"><button data-t="D" data-v="0">0</button><input id="evD" type="range" min="0" max="32" step="1" value="0"><button data-t="D" data-v="32">32</button></div>
+      <div class="evnum">能力P <span id="evDn">0</span></div>
+      <div class="nat" id="natD"><button data-v="0.9">0.9</button><button data-v="1" class="on">1.0</button><button data-v="1.1">1.1</button></div>
+    </div>
+  </div>
+
+  <div class="field full"><label>防御側 最大HP（任意・%と確定数に使用）</label><input id="hp" class="num" type="number" inputmode="numeric" placeholder="未入力ならダメージのみ"></div>
+
+  <div class="coef">
+    <div class="row"><span class="tag">相性</span>
+      <div class="seg five" id="segType"><button data-v="0.25">¼</button><button data-v="0.5">½</button><button data-v="1" class="on">×1</button><button data-v="2">×2</button><button data-v="4">×4</button></div></div>
+    <div class="row" style="margin-top:4px"><span class="tag">一致</span>
+      <div class="seg three" id="segStab"><button data-v="4096" class="on">なし</button><button data-v="6144">1.5</button><button data-v="8192">2.0</button></div></div>
+    <div class="row" style="margin-top:4px"><span class="tag">天気</span>
+      <div class="seg three" id="segWeather"><button data-v="2048">弱化½</button><button data-v="4096" class="on">なし</button><button data-v="6144">強化1.5</button></div></div>
+    <div class="row" style="margin-top:4px"><span class="tag">その他</span>
+      <div class="otherbox"><div class="inp"><span>×</span><input id="other" type="text" inputmode="decimal" value="1" autocomplete="off"></div>
+        <div class="chips" id="otherChips"><button data-v="1.3">珠1.3</button><button data-v="1.2">1.2</button><button data-v="1.5">1.5</button><button data-v="0.5">0.5</button></div></div></div>
+  </div>
+
+  <div class="toggles" style="margin-top:4px">
+    <div class="tg" id="tgBurn"><div class="t1">やけど</div><div class="t2">物理×0.5</div></div>
+    <div class="tg" id="tgDouble"><div class="t1">ダブル全体</div><div class="t2">×0.75</div></div>
+    <div class="tg" id="tgScreen"><div class="t1">壁</div><div class="t2">×0.5</div></div>
+  </div>
+
+  <div class="chip">
+    <span class="tag">設置等</span>
+    <input id="rock" type="range" min="0" max="16" step="1" value="0">
+    <span class="val" id="rockVal">1/16 ×<b>0</b></span>
+  </div>
+
+  <div class="out">
+    <div class="res normal"><div class="lbl">通常</div><div class="dmg" id="dmgN">—</div>
+      <div class="rstack"><span class="pct" id="pctN"></span><span class="ko" id="koN"></span></div></div>
+    <div class="res crit"><div class="lbl">急所</div><div class="dmg" id="dmgC">—</div>
+      <div class="rstack"><span class="pct" id="pctC"></span><span class="ko" id="koC"></span></div></div>
+    <div class="hint">順: 全体→天気→急所→乱数→一致→相性→やけど→壁→その他 ／ 実数値=floor((floor((種2+31+P2)/2)+5)×性格)</div>
+  </div>
+
+<script>
+const $ = s => document.querySelector(s);
+const state = { mode:'direct', type:1, stab:4096, weather:4096, burn:false, double:false, screen:false,
+                natA:1, natD:1 };
+
+function pokeRound(n){ const f=n-Math.floor(n); return f>0.5+1e-9 ? Math.ceil(n):Math.floor(n); }
+function mod(d,m){ return pokeRound(d*m/4096); }
+
+// チャンピオンズ非HP実数値
+function realStat(base, sp, nature){
+  if(!(base>0)) return null;
+  const inner = Math.floor((2*base + 31 + 2*sp)/2);
+  return Math.floor((inner + 5) * nature + 1e-9);
+}
+function getA(){ return state.mode==='direct' ? (+$('#atk').value||0) : (realStat(+$('#baseA').value, +$('#evA').value, state.natA)||0); }
+function getD(){ return state.mode==='direct' ? (+$('#def').value||0) : (realStat(+$('#baseD').value, +$('#evD').value, state.natD)||0); }
+
+function calc(rand, crit){
+  const lv=+$('#lv').value, pow=+$('#pow').value, atk=getA(), def=getD();
+  if(!(lv>0&&pow>0&&atk>0&&def>0)) return null;
+  const lvf=Math.floor(2*lv/5)+2;
+  let d=Math.floor(Math.floor(lvf*pow*atk/def)/50)+2;
+  if(state.double)         d=mod(d,3072);
+  if(state.weather!==4096) d=mod(d,state.weather);
+  if(crit)                 d=mod(d,6144);
+  d=Math.floor(d*rand/100);
+  if(state.stab!==4096)    d=mod(d,state.stab);
+  d=Math.floor(d*state.type);
+  if(state.burn)           d=Math.floor(d*0.5);
+  if(state.screen)         d=mod(d,2048);
+  const o=parseFloat($('#other').value);
+  if(o>0 && Math.abs(o-1)>1e-9) d=mod(d,Math.round(o*4096));
+  return Math.max(1,d);
+}
+function koText(mn,mx,ehp){
+  if(ehp<=0) return {t:'設置で瀕死',c:'rng'};
+  const fast=Math.ceil(ehp/mx), sure=Math.ceil(ehp/mn);
+  return fast===sure ? {t:'確定'+sure+'発',c:'sure'} : {t:'乱数'+fast+'発',c:'rng'};
+}
+function render(){
+  // 種族値計算の実数値表示
+  $('#rvA').textContent = state.mode==='calc' ? (realStat(+$('#baseA').value,+$('#evA').value,state.natA) ?? '—') : '—';
+  $('#rvD').textContent = state.mode==='calc' ? (realStat(+$('#baseD').value,+$('#evD').value,state.natD) ?? '—') : '—';
+  $('#evAn').textContent=$('#evA').value; $('#evDn').textContent=$('#evD').value;
+
+  const hp=+$('#hp').value, n=+$('#rock').value;
+  let constant=0, ehp=0;
+  if(hp>0){ constant=Math.floor(hp*n/16); ehp=Math.max(0,hp-constant); }
+  $('#rockVal').innerHTML='1/16 ×<b>'+n+'</b>'+(hp>0?(' −'+constant):'');
+
+  for(const [dSel,pSel,kSel,crit] of [['#dmgN','#pctN','#koN',false],['#dmgC','#pctC','#koC',true]]){
+    const mn=calc(85,crit), mx=calc(100,crit);
+    if(mn===null){ $(dSel).textContent='—'; $(pSel).textContent=''; $(kSel).textContent=''; continue; }
+    $(dSel).textContent = mn===mx ? mn : mn+'–'+mx;
+    if(hp>0){
+      $(pSel).innerHTML='<b>'+(mn/hp*100).toFixed(1)+'–'+(mx/hp*100).toFixed(1)+'</b>%';
+      const k=koText(mn,mx,ehp); const el=$(kSel); el.textContent=k.t; el.className='ko '+k.c;
+    } else { $(pSel).textContent=''; $(kSel).textContent=''; }
+  }
+}
+
+function bindSeg(id,key,parse){ const box=$(id);
+  box.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b)return;
+    [...box.children].forEach(c=>c.classList.remove('on')); b.classList.add('on');
+    state[key]=parse(b.dataset.v); render(); }); }
+bindSeg('#segType','type',v=>parseFloat(v));
+bindSeg('#segStab','stab',v=>parseInt(v));
+bindSeg('#segWeather','weather',v=>parseInt(v));
+
+// 入力モード切替
+$('#segMode').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b)return;
+  [...$('#segMode').children].forEach(c=>c.classList.remove('on')); b.classList.add('on');
+  state.mode=b.dataset.v;
+  $('#directBox').style.display = state.mode==='direct'?'grid':'none';
+  $('#calcBox').style.display   = state.mode==='calc'?'grid':'none';
+  render(); });
+
+// 性格スイッチ
+function bindNat(id,key){ const box=$(id);
+  box.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b)return;
+    [...box.children].forEach(c=>c.classList.remove('on')); b.classList.add('on');
+    state[key]=parseFloat(b.dataset.v); render(); }); }
+bindNat('#natA','natA'); bindNat('#natD','natD');
+
+// EV 0/32 ボタン
+document.querySelectorAll('.evr button').forEach(btn=>{
+  btn.addEventListener('click',()=>{ const t=btn.dataset.t, v=btn.dataset.v;
+    $('#ev'+t).value=v; render(); }); });
+
+function bindTg(id,key){ $(id).addEventListener('click',()=>{ state[key]=!state[key];
+  $(id).classList.toggle('on',state[key]); render(); }); }
+bindTg('#tgBurn','burn'); bindTg('#tgDouble','double'); bindTg('#tgScreen','screen');
+
+$('#otherChips').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b)return;
+  const cur=$('#other').value, v=b.dataset.v, active=b.classList.contains('on');
+  [...$('#otherChips').children].forEach(c=>c.classList.remove('on'));
+  if(active && cur===v){ $('#other').value='1'; } else { b.classList.add('on'); $('#other').value=v; }
+  render(); });
+$('#other').addEventListener('input',()=>{ [...$('#otherChips').children].forEach(c=>c.classList.remove('on')); render(); });
+
+document.querySelectorAll('input').forEach(i=>i.addEventListener('input',render));
+render();
+</script>
+
+
+</body></html>
